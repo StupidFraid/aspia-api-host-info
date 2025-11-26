@@ -1,0 +1,23 @@
+# Aspia REST API Configuration
+
+[router]
+# Aspia Router host address
+host = 127.0.0.1
+
+# Aspia Router port (default: 8060)
+port = 8060
+
+# Router admin credentials
+username = admin_remote
+password = secret_host_password
+
+[app]
+# Enable debug logging
+debug = false
+
+[host]
+# Credentials for connecting to hosts
+# Note: Currently the application uses router credentials for host authentication
+# These fields are reserved for future use
+username = user
+password = user

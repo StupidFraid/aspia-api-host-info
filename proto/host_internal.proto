@@ -1,0 +1,146 @@
+//
+// Aspia Project
+// Copyright (C) 2016-2025 Dmitry Chapyshev <dmitry@aspia.ru>
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
+//
+// WARNING! For internal use only, on the host side. Messages in this file are not intended for
+// transmission over the network.
+//
+
+syntax = "proto3";
+option go_package = "aspia_rest_api/proto/host_internal";
+
+option optimize_for = LITE_RUNTIME;
+
+import "peer.proto";
+import "text_chat.proto";
+
+package proto.internal;
+
+message CredentialsRequest
+{
+    enum Type
+    {
+        UNKNOWN_TYPE = 0;
+        REFRESH      = 1;
+        NEW_PASSWORD = 2;
+    }
+
+    Type type = 1;
+}
+
+message Credentials
+{
+    fixed64 host_id = 1;
+    string password = 2;
+}
+
+message OneTimeSessions
+{
+    uint32 sessions = 1;
+}
+
+message ConnectEvent
+{
+    uint32 id                     = 1;
+    string computer_name          = 2;
+    string display_name           = 3;
+    peer.SessionType session_type = 4;
+}
+
+message DisconnectEvent
+{
+    uint32 id = 1;
+}
+
+message RouterState
+{
+    enum State
+    {
+        UNKNOWN    = 0;
+        DISABLED   = 1;
+        CONNECTING = 2;
+        CONNECTED  = 3;
+        FAILED     = 4;
+    }
+
+    string host_name = 1;
+    uint32 host_port = 2;
+    State state      = 3;
+}
+
+message ConnectConfirmationRequest
+{
+    uint32 id                     = 1;
+    uint32 timeout                = 2;
+    string user_name              = 3;
+    string computer_name          = 4;
+    peer.SessionType session_type = 5;
+}
+
+message ConnectConfirmation
+{
+    uint32 id              = 1;
+    bool accept_connection = 2;
+}
+
+message ServiceControl
+{
+    enum Code
+    {
+        CODE_UNKNOWN       = 0;
+        CODE_KILL          = 1;
+        CODE_PAUSE         = 2;
+        CODE_LOCK_MOUSE    = 3;
+        CODE_LOCK_KEYBOARD = 4;
+        CODE_VOICE_CHAT    = 5;
+    }
+
+    Code code = 1;
+    oneof value
+    {
+        int64 signed_integer    = 2;
+        uint64 unsigned_integer = 3;
+        bool boolean            = 4;
+        string utf8_string      = 5;
+    }
+}
+
+message VideoRecordingState
+{
+    string computer_name = 1;
+    string user_name     = 2;
+    bool started         = 3;
+}
+
+message UiToService
+{
+    CredentialsRequest credentials_request   = 1;
+    OneTimeSessions one_time_sessions        = 2;
+    ConnectConfirmation connect_confirmation = 3;
+    ServiceControl control                   = 4;
+    text_chat.TextChat text_chat             = 5;
+}
+
+message ServiceToUi
+{
+    RouterState router_state                                = 1;
+    Credentials credentials                                 = 2;
+    ConnectEvent connect_event                              = 3;
+    DisconnectEvent disconnect_event                        = 4;
+    ConnectConfirmationRequest connect_confirmation_request = 5;
+    VideoRecordingState video_recording_state               = 6;
+    text_chat.TextChat text_chat                            = 7;
+}

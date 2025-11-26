@@ -1,0 +1,56 @@
+//
+// Aspia Project
+// Copyright (C) 2016-2025 Dmitry Chapyshev <dmitry@aspia.ru>
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
+//
+
+syntax = "proto3";
+option go_package = "aspia_rest_api/proto/text_chat";
+
+option optimize_for = LITE_RUNTIME;
+
+package proto.text_chat;
+
+message Status
+{
+    enum Code
+    {
+        CODE_UNKNOWN           = 0;
+        CODE_STARTED           = 1;
+        CODE_STOPPED           = 2;
+        CODE_TYPING            = 3;
+        CODE_USER_DISCONNECTED = 4;
+        CODE_USER_CONNECTED    = 5;
+    }
+
+    int64 timestamp = 1;
+    string source   = 2;
+    string target   = 3;
+    Code code       = 4;
+}
+
+message Message
+{
+    int64 timestamp = 1;
+    string source   = 2;
+    string target   = 3;
+    string text     = 4;
+}
+
+message TextChat
+{
+    Status chat_status = 1;
+    Message chat_message   = 2;
+}

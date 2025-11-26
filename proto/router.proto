@@ -1,0 +1,109 @@
+//
+// Aspia Project
+// Copyright (C) 2016-2025 Dmitry Chapyshev <dmitry@aspia.ru>
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
+//
+
+syntax = "proto3";
+option go_package = "aspia_rest_api/proto/router";
+
+option optimize_for = LITE_RUNTIME;
+
+package proto.router;
+
+enum ChannelId
+{
+    CHANNEL_ID_SESSION = 0;
+}
+
+enum SessionType
+{
+    SESSION_TYPE_UNKNOWN = 0;
+    SESSION_TYPE_ADMIN   = 1;
+    SESSION_TYPE_CLIENT  = 2;
+    SESSION_TYPE_HOST    = 4;
+    SESSION_TYPE_RELAY   = 8;
+}
+
+message RelayKey
+{
+    enum Type
+    {
+        TYPE_UNKNOWN = 0;
+        TYPE_X25519  = 1;
+    }
+
+    enum Encryption
+    {
+        ENCRYPTION_UNKNOWN           = 0;
+        ENCRYPTION_CHACHA20_POLY1305 = 1;
+    }
+
+    // Unique key identifier in the proxy pool.
+    uint32 key_id = 1;
+
+    // Key type.
+    Type type = 2;
+
+    // Encryption algorithm.
+    Encryption encryption = 3;
+
+    // Public key of the proxy.
+    bytes public_key = 4;
+
+    // Initialization vector.
+    bytes iv = 5;
+}
+
+message RelayCredentials
+{
+    string host  = 1;
+    uint32 port  = 2;
+    RelayKey key = 3;
+    bytes secret = 4;
+}
+
+message PeerConnection
+{
+    enum PeerStatus
+    {
+        PEER_STATUS_UNKNOWN  = 0;
+        PEER_STATUS_ACTIVE   = 1;
+        PEER_STATUS_FINISHED = 2;
+    }
+
+    uint64 session_id       = 1;
+    PeerStatus status       = 2;
+    string client_address   = 3;
+    string client_user_name = 4;
+    string host_address     = 5;
+    fixed64 host_id         = 6;
+    int64 bytes_transferred = 7;
+    int64 duration          = 8;
+    int64 idle_time         = 9;
+}
+
+enum PeerConnectionRequestType
+{
+    PEER_CONNECTION_REQUEST_UNKNOWN    = 0;
+    PEER_CONNECTION_REQUEST_DISCONNECT = 1;
+}
+
+message PeerConnectionRequest
+{
+    int64 relay_session_id         = 1;
+    PeerConnectionRequestType type = 2;
+    uint64 peer_session_id         = 3;
+}
