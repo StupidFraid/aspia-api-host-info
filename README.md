@@ -1,75 +1,112 @@
-# Aspia REST API
+# Документация Aspia REST API
 
-REST API для работы с Aspia Router - получение списка хостов и конфигурации отдельных хостов.
+Этот API предоставляет доступ к информации о Aspia Router и Host, включая детальную конфигурацию системы.
 
-## Эндпоинты
+## Базовый URL
+`http://localhost:8080` (по умолчанию)
 
-### GET /hosts
-Получить список всех доступных хостов на Aspia Router.
+## Аутентификация
+API использует комбинацию настроек по умолчанию из `config.ini` и HTTP-заголовков для аутентификации.
+
+### Заголовки (Headers)
+Вы можете переопределить учетные данные из `config.ini`, передав следующие заголовки в запросе:
+
+| Заголовок | Описание |
+| :--- | :--- |
+| `X-Aspia-Router-User` | Имя пользователя для подключения к Aspia Router (доступ администратора). |
+| `X-Aspia-Router-Password` | Пароль для Aspia Router. |
+| `X-Aspia-Host-User` | Имя пользователя для аутентификации на целевом Хосте (System Info). |
+| `X-Aspia-Host-Password` | Пароль для целевого Хоста. |
+
+---
+
+## Эндпоинты (Endpoints)
+
+### 1. Получить список хостов
+Возвращает список всех хостов, подключенных к Aspia Router.
+
+**Запрос:**
+`GET /hosts`
 
 **Ответ:**
 ```json
 [
   {
-    "host_id": 48,
-    "session_id": 1,
-    "computer_name": "DESKTOP-ABC",
+    "host_id": 43,
+    "session_id": 12345,
+    "computer_name": "WORKSTATION-01",
     "ip_address": "192.168.1.100",
     "os_name": "Windows 10 Pro",
-    "architecture": "x86_64",
-    "version": "2.7.0.4866"
+    "architecture": "x64",
+    "version": "2.5.2.0"
   }
 ]
 ```
 
-### GET /hosts/{hostId}/config
-Получить конфигурацию конкретного хоста, подключившись к нему через Aspia Relay.
+### 2. Получить конфигурацию хоста (System Info)
+Возвращает детальную системную информацию для конкретного хоста.
 
-**Параметры:**
-- `hostId` - ID хоста (из списка хостов)
+**Запрос:**
+`GET /hosts/{hostId}/config`
+
+**Параметры запроса (Query Parameters):**
+
+| Параметр | Тип | По умолчанию | Описание |
+| :--- | :--- | :--- | :--- |
+| `category` | string | `summary` | Указывает, какую категорию данных получить. |
+
+**Поддерживаемые категории:**
+*   `summary` (По умолчанию): Базовая информация (Компьютер, ОС, CPU, RAM и т.д.)
+*   `all`: **Все доступные категории** (тяжелый запрос)
+*   `video_adapters`: Видеокарты и драйверы
+*   `monitors`: Подключенные мониторы
+*   `printers`: Установленные принтеры
+*   `applications`: Установленные программы
+*   `drivers`: Системные драйверы
+*   `services`: Службы Windows
+*   `users`: Локальные пользователи
+*   `processes`: Запущенные процессы
+
+**Пример запроса:**
+```bash
+curl -H "X-Aspia-Host-User: admin" \
+     -H "X-Aspia-Host-Password: secret" \
+     "http://localhost:8080/hosts/43/config?category=video_adapters"
+```
 
 **Ответ:**
 ```json
 {
-  "host_id": 48,
-  "system_info": "OS: Windows 10 Pro, Arch: x86_64, Version: 2.7.0.4866"
+  "host_id": 43,
+  "system_info": {
+    "video_adapters": [
+      {
+        "name": "NVIDIA GeForce RTX 3060",
+        "memory": "12288 MB"
+      }
+    ]
+  }
 }
 ```
 
-### GET /health
-Проверка работоспособности API.
+## Коды ошибок
 
-**Ответ:**
+Ошибки возвращаются в формате JSON:
 ```json
 {
-  "status": "OK"
+  "error": "Router authentication failed: access denied",
+  "code": "router_auth_failed"
 }
 ```
 
-## Запуск
+### Распространенные коды ошибок
 
-1. Убедитесь, что файл `config.ini` находится в родительской директории
-2. Установите зависимости:
-```bash
-go mod tidy
-```
-
-3. Запустите сервер:
-```bash
-go run main.go
-```
-
-Сервер будет доступен на `http://localhost:8080`
-
-## Примеры использования
-
-```bash
-# Получить список хостов
-curl http://localhost:8080/hosts
-
-# Получить конфигурацию хоста с ID 48
-curl http://localhost:8080/hosts/48/config
-
-# Проверить здоровье API
-curl http://localhost:8080/health
-```
+| Код (code) | HTTP Статус | Описание |
+| :--- | :--- | :--- |
+| `router_auth_failed` | 401 | Неверные учетные данные Роутера. |
+| `host_auth_failed` | 401 | Неверные учетные данные Хоста. |
+| `router_connection_failed` | 500 | Не удалось подключиться к Роутеру. |
+| `router_operation_failed` | 500 | Не удалось получить список хостов. |
+| `host_operation_failed` | 500 | Не удалось получить системную информацию с Хоста. |
+| `bad_request` | 400 | Неверные параметры (например, ID хоста). |
+| `internal_error` | 500 | Внутренняя ошибка сервера (например, ошибка JSON). |
